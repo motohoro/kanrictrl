@@ -1,0 +1,376 @@
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=shift_jis">
+<title>kanri3</title>
+<HTA:APPLICATION 
+     ID="objTestHTA"
+     APPLICATIONNAME="(-_-#)!"
+     SINGLEINSTANCE="yes"
+>
+<script type="text/javascript">
+/*
+function CheckDate(days){ 
+    days = eval( days );    //引数を数字に 
+
+    myDate = new Date();     
+    dd = myDate.getDate();    //現在の日付を取得 
+    dd += days;                //日付を加 or 減 => 得たい日付となる 
+    myDate.setDate(dd);        //得たい日付を直接セット 
+
+    yy = myDate.getFullYear(); 
+    mm = myDate.getMonth() + 1; 
+    dd = myDate.getDate(); 
+     
+    str = yy + '/' + mm + '/' + dd;
+    form1.playday.value=str;
+}
+*/
+function UpperClear()
+{
+form1.whoam.value="";
+form1.hutan.value="";
+form1.otc.value="";
+form1.crehutan.value="";
+form1.creotc.value="";
+form1.tobank.value="";
+}
+
+function DownerClear()
+{
+//form1.playday.value="";
+form1.zivai.checked=false;
+form1.sonpo.value="";
+form1.hurikomi.value="";
+form1.bunsyo.value="";
+form1.card.checked=false;
+form1.alloutbank.value="";
+form1.tesuryo.value="";
+form1.risoku.value="";
+
+}
+</script>
+
+<script type="text/vbscript">
+
+Set myXlsAPP = Nothing
+Set myTEST = Nothing
+
+'エラーが出た時Excelを終わらせる
+Sub FatalEnd()
+	myTEST.close
+	myXlsAPP.Quit
+
+	Set XlsAPP = Nothing
+	Set myTEST = Nothing
+End Sub
+
+Sub ExcelChk()
+'Dim xls' As Object'As Excel.Application
+'Dim wkb' As Object'As Excel.Workbook
+
+Set myXlsAPP = Nothing
+Set myTEST = Nothing
+
+'    arrCommands = Split(objTestHTA.commandLine, chr(34))
+	xFilePath= xltarget()'arrCommands(3)
+
+    On Error Resume Next
+    Set xls = GetObject(, "Excel.application")
+    If Err.Number <> 0 Then
+        Err.Clear
+		Set myXlsAPP = CreateObject("Excel.Application")
+''		myXlsAPP.Visible = True
+		Set myTEST = myXlsAPP.Workbooks.Open(xFilePath)
+		Err.Clear
+    Else
+'		On Error GoTo Err_exOpenEditC
+		Set myXlsAPP=xls
+			Dim Stay
+			Stay=0
+		For Each wkb In xls.Workbooks
+            If wkb.Name = Dir(xFilePath) Then
+                Set myTEST = wkb
+				Stay=1
+            End If
+        Next
+            if Stay=0 then
+           		Set myTEST = myXlsAPP.Workbooks.Open(xFilePath)
+            End if
+''        myXlsAPP.Visible=True
+    End If
+'	if Err.Number <>0 Then
+'		FatalEnd()
+'	End If
+	On Error Goto 0
+End Sub
+
+Function xltarget()
+Set objShell = CreateObject("WScript.Shell")
+tops = objShell.SpecialFolders("Desktop")
+
+Set regEx = New RegExp
+regEx.Pattern = "\d{5,6}現金出納表V2.xls"          ' 検索文字列を検索パターンとして指定
+regEx.Global = True                          ' 文字列全体を検索するように指定
+regEx.IgnoreCase = True                      ' 大文字・小文字は検索に影響しない
+
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set src = fso.GetFolder(tops)
+Dim kouho
+kouho = "200101現金出納表V2.xls"
+For Each FileName In src.Files
+	If regEx.Test(FileName) Then
+		if (regEx.Execute(FileName)).Item(0).length = 16 Then
+			nw = Left((regEx.Execute(FileName)).Item(0),4)+"0"+Mid((regEx.Execute(FileName)).Item(0),5,1)
+		else 
+			nw=left((regEx.Execute(FileName)).Item(0),6)
+		end If
+'		if regEx.Test(kouho) Then
+		if (regEx.Execute(kouho)).Item(0).length = 16 Then
+			ko = Left((regEx.Execute(kouho)).Item(0),4)+"0"+Mid((regEx.Execute(kouho)).Item(0),5,1)
+		else
+			ko=left((regEx.Execute(kouho)).Item(0),6)
+		End If
+'		msgbox("KO:"+ko+"  NW:"+nw)
+		if ko < nw Then
+			xFilePath = FileName
+			kouho=FileName
+		Else
+			xFilePath=kouho
+		End If
+	End if
+Next
+	if xFilePath="" Then
+	msgbox "NotFile"
+	window.close()
+	End if
+
+xltarget=xFilePath
+End Function
+
+If False Then '通帳処理なのでコメントアウトスタート
+Sub BankMendoPlay()
+'    arrCommands = Split(objTestHTA.commandLine, chr(34))
+'xFilePath= arrCommands(3)
+'msgbox(xFilePath)
+
+'Set myXlsAPP = GetObject(xFilePath,"Excel.Sheet")
+'myXlsAPP.Application.Visible=True
+'myXlsAPP.Parent.Windows(1).Visible=True
+'Set myXlsBook = myXlsAPP'.Workbooks.Item(1)
+ExcelChk()
+
+Set myXlsBook = myTEST
+
+
+'Set myXlsAPP = CreateObject("Excel.Application")
+'myXlsAPP.Visible = True
+'Set myXlsBook = myXlsAPP.Workbooks.Open(xFilePath)
+
+Set myBankSheet = myXlsBook.Sheets("銀行明細")
+
+bk=3
+Do
+bk=bk+1
+dats = myBankSheet.cells(bk,1).value
+loop While (dats<>"")
+
+if form1.zivai.checked=true Then
+//	myBankSheet.cells(bk,1).value=form1.playday.value
+	myBankSheet.cells(bk,2).value="4111売上高"
+	myBankSheet.cells(bk,3).value=form1.sonpo.value
+
+	Dim bun
+	if(isnumeric(form1.bunsyo.value)=false) then
+	bun=0
+	Else
+	bun=form1.bunsyo.value
+	End if
+	myBankSheet.cells(bk,4).value=form1.hurikomi.value-bun 'form1.bunsyo.value
+	bk=bk+1
+	if(isnumeric(form1.bunsyo.value)=true) Then 'form1.bunsyo.value<>"" or form1.bunsyo.value>0) then
+	if(form1.bunsyo.value>0) Then
+		myBankSheet.cells(bk,1).value=form1.playday.value
+		myBankSheet.cells(bk,2).value="7118雑収入"
+		myBankSheet.cells(bk,3).value=form1.sonpo.value
+		myBankSheet.cells(bk,4).value=form1.bunsyo.value
+		bk=bk+1
+	End if
+	end if
+End if
+
+if form1.card.checked=true Then
+	myBankSheet.cells(bk,1).value=form1.playday.value
+	myBankSheet.cells(bk,2).value="1113普通預金"
+	myBankSheet.cells(bk,3).value="カード振替"
+	Dim suryo
+	if(isnumeric(form1.tesuryo.value)=false) then
+	suryo=0
+	Else 
+	suryo=form1.tesuryo.value
+	End if
+	
+	myBankSheet.cells(bk,5).value=form1.alloutbank.value-suryo 'form1.tesuryo.value
+	bk=bk+1
+	if(isnumeric(form1.tesuryo.value)=true) Then 'form1.tesuryo.value<>"") Then
+	if(form1.tesuryo.value>0) then
+		myBankSheet.cells(bk,1).value=form1.playday.value
+		myBankSheet.cells(bk,2).value=""
+		myBankSheet.cells(bk,3).value="支払手数料"
+		myBankSheet.cells(bk,5).value=form1.tesuryo.value
+		bk=bk+1
+	End if
+	End if
+End if
+if(form1.risoku.value<>"") then
+	myBankSheet.cells(bk,1).value=form1.playday.value
+	myBankSheet.cells(bk,2).value="7111受取利息"
+	myBankSheet.cells(bk,3).value="利息"
+	myBankSheet.cells(bk,4).value=form1.risoku.value
+	bk=bk+1
+
+end if
+msgbox("銀行明細処理終了")
+End Sub
+End If '通帳処理なのでコメントアウトスタート
+
+Sub KonnanDoyaPlay()
+
+End Sub
+
+'翌日（翌日作成ボタンを擬似押ししてそれぞれの値を当てはめる）
+Sub DoyanenPlay(flag)
+
+'マクロはModule11に印刷。新シート作成。翌月分作成2。送信
+'他は目的のマクロ処理後に決まったセルのはず。
+'欄については上から全部調べても良いかな。
+'    arrCommands = Split(objTestHTA.commandLine, chr(34))
+'    For i = 3 to (Ubound(arrCommands) - 1) Step 2
+'        'Msgbox arrCommands(i)
+'    Next
+xFilePath= xltarget()'arrCommands(3)
+'Set myXlsAPP = CreateObject("Excel.Application") 
+'myXlsAPP.Visible = True
+'Set myXlsBook = myXlsAPP.Workbooks.Open(xFilePath)
+
+
+ExcelChk()
+Set myXlsBook = myTEST
+Set myXlsAPP = myXlsAPP
+
+IF flag="NEXT" Then
+Dim MAILADDRESS
+MAILADDRESS =""
+'翌月（翌月マクロとメール送信と銀行明細の印刷をさせるため）
+'このファイルをメールして印刷する。
+'H19.1.17専務からの変更事項メールによって、メール送信と銀行明細の印刷は不要となったため、
+'以下on Error Goto 0までは無効にした
+'On Error Resume Next
+''myXlsBook.SendMail "MAILADDRESS","現金出納表"'こちらの送信はCDOか何かで送るため警告
+''myXlsAPP.Dialogs(189).Show "MAILADDRESS","現金出納表"'こちらの送信は添付した状態で画面表示。189はxlDialogsSendMailの番号
+'Set bankSheet = myXlsBook.WorkSheets("銀行明細")
+'bankSheet.Select
+'if(1<>msgbox("銀行残高が通帳と同じか確認してからＯＫボタン、並べ替えは自動でやるので必要なし",49)) Then
+'Exit Sub
+'End If
+
+'Set bankRange = bankSheet.Range("A5")
+'myXlsAPP.Range("A5").Select
+'myXlsAPP.Selection.Sort myXlsAPP.ActiveSheet.Range("A5"),1,,,,,,0,,False,1,1
+'myXlsAPP.Dialogs(189).Show "MAILADDRESS","現金出納表"'こちらの送信は添付した状態で画面表示。189はxlDialogsSendMailの番号
+
+'bankSheet.printOut()
+'On Error Goto 0
+''''''''''''exit Sub
+'''''''''''''''''''''''''''''''
+myXlsAPP.run("Module11.翌月分作成")
+Set colSheets = myXlsBook.ActiveSheet
+
+Elseif flag="NOW" then
+
+myXlsBook.Activate
+myXlsAPP.run("Module11.新シート作成")
+
+Set colSheets = myXlsBook.ActiveSheet
+End If
+
+if(form1.whoam.value<>"") then colSheets.cells(2,10).value=form1.whoam.value
+if(form1.hutan.value<>"") then colSheets.cells(6,8).value=form1.hutan.value
+if(form1.otc.value<>"") then colSheets.cells(8,8).value=form1.otc.value
+if(form1.crehutan.value<>"") then colSheets.cells(34,10).value=form1.crehutan.value
+if(form1.creotc.value<>"") then colSheets.cells(35,10).value=form1.creotc.value
+if(form1.tobank.value<>"") then colSheets.cells(25,9).value=form1.tobank.value
+
+'Set objShell = CreateObject("WScript.Shell")
+'myXlsAPP.Evaluate(msgbox(colSheets.cells(31,10).value,,"ss"))
+'do while(objShell.AppActivate("kanri3"))
+'loop
+'Set objWorkbook = objExcel.Workbooks.Add()
+'Set colSheets = objWorkbook.Sheets
+'colSheets.Add ,,9
+
+myXlsAPP.Visible=True
+End Sub
+
+Sub Manual()
+If man.innerHTML="" Then
+man.innerHTML="<font size=-2>デスクトップ上が整理されていれば、自動で当月分ファイルを調べます。<br>毎日使用分<br>それぞれ入力してExcel使ってない事を確認して当月営業日なり翌月営業日なりをクリックしてください。<!--<strike>翌月営業日を押すともちろん経理へのメールや銀行明細の印刷は自動で処理されます。タスクバーがチカチカしたらメールを送ろうとしているのだと思います。確認してください。ここで一手間かかるのはExcelの仕様です</strike><br></font>-->"
+
+Else
+man.innerHTML=""
+End if
+End Sub
+</script>
+</head>
+<script type="text/vbscript">
+Sub Window_onLoad
+
+'WindowsScriptEncoder CommandLine
+'C:\Program Files\Windows Script Encoder\screnc.exe /e html kanriCtrl2.hta kanriCtrl2e.hta
+'    arrCommands = Split(objTestHTA.commandLine, chr(34))
+	'    For i = 3 to (Ubound(arrCommands) - 1) Step 2
+	'        Msgbox arrCommands(i)
+	'    Next
+'	if (Ubound(arrCommands) - 1)<3 Then
+'		Msgbox "ちゃんとした手順で呼び出してください"
+'		window.close()
+'	End if
+	window.resizeTo 730,400
+	document.form1.whoam.focus()
+
+End Sub
+</script>
+<body><!-- onLoad="CheckDate(-1)">-->
+<font size="-2">現金出納表。ものすごく細かくなったので見にくい。日常使う項目なんて限られてると思うのだが<br>
+元のには全く手を加えてないので、消す時はこのファイルを削除するだけ。
+</font>
+<a href=# onClick="Manual()">使い方</a><div id="man"></div>
+<form name="form1"><b>毎日使用分</b><br>
+<table>
+<tr><td>記入者</td><td><input type="text" name="whoam" style="ime-mode: active"></td></tr>
+<tr><td>現金負担金</td><td><input type="text" name="hutan" style="ime-mode: disabled"></td></tr>
+<tr><td>現金OTC</td><td><input type="text" name="otc" style="ime-mode: disabled"></td></tr>
+<tr><td>Cre負担金</td><td><input type="text" name="crehutan" style="ime-mode: disabled"></td></tr>
+<tr><td>CreOTC</td><td><input type="text" name="creotc" style="ime-mode: disabled"></td></tr>
+<tr><td>銀行入金</td><td><input type="text" name="tobank" style="ime-mode: disabled"></td></tr>
+</table>
+<input type="button" value="当月営業日" onClick="DoyanenPlay('NOW')">
+<input type="button" value="翌月営業日" onClick="DoyanenPlay('NEXT')">
+<input type="button" value="クリア" onClick="UpperClear()"><br>
+<!--
+<hr>
+<b>銀行明細分</b><br>
+日付<input type="text" name="playday" style="ime-mode: disabled"><br>
+<input type="checkbox" name="zivai">自賠責<br>
+会社名<input type="text" name="sonpo" style="ime-mode: active"><br>
+振込総額<input type="text" name="hurikomi" style="ime-mode: disabled"><br>
+うち文書料<input type="text" name="bunsyo" style="ime-mode: disabled"><br>
+<input type="checkbox" name="card">カード振替<br>
+出金総額<input type="text" name="alloutbank" style="ime-mode: disabled"><br>
+うち手数料<input type="text" name="tesuryo" style="ime-mode: disabled"><br>
+利息<input type="text" name="risoku" style="ime-mode: disabled"><br>
+<input type="button" value="銀行明細処理" onClick="BankMendoPlay()">
+-->
+<!--<input type="button" value="←する前に出納表ファイルが開いてない時は先にここを押して下さい" onClick="DownerClear();DoyanenPlay('HELLO')"><br>-->
+<!--<input type="button" value="クリア" onClick="DownerClear()"><br>-->
+</form>
+Copyright:(C) 2006 Mitsuhiro Matsumoto All Rights Reserved.
+</body>
